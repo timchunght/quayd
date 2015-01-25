@@ -1,20 +1,15 @@
 package quayd
 
 var (
-	DefaultStatusesRepository = &statusesRepository{}
-	DefaultCommitResolver     = &commitResolver{}
+	DefaultStatusesRepository = &FakeStatusesRepository{}
+	DefaultCommitResolver     = &FakeCommitResolver{}
 	DefaultStatusesService    = &StatusesService{
 		StatusesRepository: DefaultStatusesRepository,
 		CommitResolver:     DefaultCommitResolver,
 	}
 )
 
-// StatusesRepository is an interface that can be implemented for creating
-// Commit Statuses.
-type StatusesRepository interface {
-	Create(*Status) error
-}
-
+// Status represents a GitHub Commit Status.
 type Status struct {
 	Repo    string
 	Ref     string
@@ -22,16 +17,38 @@ type Status struct {
 	Context string
 }
 
-// statusesRepository is a fake implementation of the StatusesRepository
-// interface.
-type statusesRepository struct {
-	s []*Status
+// StatusesRepository is an interface that can be implemented for creating
+// Commit Statuses.
+type StatusesRepository interface {
+	Create(*Status) error
 }
 
-func (r *statusesRepository) Create(status *Status) error {
-	r.s = append(r.s, status)
+// FakeStatusesRepository is a fake implementation of the StatusesRepository
+// interface.
+type FakeStatusesRepository struct {
+	Statuses []*Status
+}
+
+// NewStatusesRepository returns a new StatusesRepository implementation.
+func NewStatusesRepository(kind string) StatusesRepository {
+	switch kind {
+	case "fake":
+		return &FakeStatusesRepository{}
+	default:
+		panic("Not a valid statuses repository.")
+	}
+}
+
+// Create implements StatusesRepository Create.
+func (r *FakeStatusesRepository) Create(status *Status) error {
+	r.Statuses = append(r.Statuses, status)
 
 	return nil
+}
+
+// Reset resets the collection of Statuses.
+func (r *FakeStatusesRepository) Reset() {
+	r.Statuses = nil
 }
 
 // CommitResolver is an interface for resolving a short sha to a full 40
@@ -40,13 +57,16 @@ type CommitResolver interface {
 	Resolve(short string) (string, error)
 }
 
-// commitResolver just returns the short sha.
-type commitResolver struct{}
+// FakeCommitResolver just returns the short sha.
+type FakeCommitResolver struct{}
 
-func (c *commitResolver) Resolve(short string) (string, error) {
+// Resolve implements CommitResolver Resolve.
+func (cr *FakeCommitResolver) Resolve(short string) (string, error) {
 	return short, nil
 }
 
+// StatusesService provides a convenient server for creating new commit
+// statuses.
 type StatusesService struct {
 	StatusesRepository
 	CommitResolver
