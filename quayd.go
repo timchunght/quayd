@@ -57,12 +57,12 @@ type CommitResolver interface {
 	Resolve(short string) (string, error)
 }
 
-// FakeCommitResolver just returns the short sha.
+// FakeCommitResolver returns the short sha prefixed with the string "long".
 type FakeCommitResolver struct{}
 
 // Resolve implements CommitResolver Resolve.
 func (cr *FakeCommitResolver) Resolve(short string) (string, error) {
-	return short, nil
+	return "long-" + short, nil
 }
 
 // StatusesService provides a convenient server for creating new commit
