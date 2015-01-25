@@ -7,6 +7,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var validStatuses = []string{"pending", "success", "error", "failure"}
+
 type Server struct {
 	http.Handler
 }
@@ -35,6 +37,13 @@ type WebhookForm struct {
 
 func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	status := vars["status"]
+
+	if !validStatus(status) {
+		http.Error(w, "Invalid status: "+status, 400)
+		return
+	}
+
 	var form WebhookForm
 
 	if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
@@ -42,8 +51,17 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := wh.StatusesService.Create(form.Repository, form.BuildName, vars["status"]); err != nil {
+	if err := wh.StatusesService.Create(form.Repository, form.BuildName, status); err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
+}
+
+func validStatus(a string) bool {
+	for _, b := range validStatuses {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }

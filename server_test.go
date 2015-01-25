@@ -13,6 +13,7 @@ var body = `{"build_id": "077f3664-35d3-48e6-9da7-889f9be73070", "trigger_kind":
 func TestWebhook(t *testing.T) {
 	r := DefaultStatusesRepository
 	s := NewServer(nil)
+	defer r.Reset()
 
 	tests := []struct {
 		status   string
@@ -38,5 +39,19 @@ func TestWebhook(t *testing.T) {
 		if got, want := r.Statuses[0], &tt.expected; !reflect.DeepEqual(got, want) {
 			t.Fatalf("Status => %q; want %q", got, want)
 		}
+	}
+}
+
+func TestWebhook_InvalidStatus(t *testing.T) {
+	r := DefaultStatusesRepository
+	s := NewServer(nil)
+
+	resp := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/quay/foo", bytes.NewBufferString(body))
+
+	s.ServeHTTP(resp, req)
+
+	if len(r.Statuses) != 0 {
+		t.Fatal("Expected 0 commit statuses")
 	}
 }
