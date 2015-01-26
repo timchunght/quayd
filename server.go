@@ -13,20 +13,20 @@ type Server struct {
 	http.Handler
 }
 
-func NewServer(s *StatusesService) *Server {
-	if s == nil {
-		s = DefaultStatusesService
+func NewServer(q *Quayd) *Server {
+	if q == nil {
+		q = Default
 	}
 
 	m := mux.NewRouter()
 
-	m.Handle("/quay/{status}", &Webhook{s}).Methods("POST")
+	m.Handle("/quay/{status}", &Webhook{q}).Methods("POST")
 
 	return &Server{m}
 }
 
 type Webhook struct {
-	*StatusesService
+	*Quayd
 }
 
 type WebhookForm struct {
@@ -51,7 +51,7 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := wh.StatusesService.Create(form.Repository, form.BuildName, status); err != nil {
+	if err := wh.Quayd.Handle(form.Repository, form.BuildName, status); err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}

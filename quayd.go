@@ -3,6 +3,8 @@ package quayd
 import (
 	"strings"
 
+	"code.google.com/p/goauth2/oauth"
+
 	"github.com/ejholmes/go-github/github"
 )
 
@@ -17,11 +19,8 @@ var (
 	// DefaultCommitResolver is the default CommitResolver to use.
 	DefaultCommitResolver = &FakeCommitResolver{}
 
-	// DefaultStatusesService is the default StatusesService to use.
-	DefaultStatusesService = &StatusesService{
-		StatusesRepository: DefaultStatusesRepository,
-		CommitResolver:     DefaultCommitResolver,
-	}
+	// Default is the default Quayd to use.
+	Default = &Quayd{}
 )
 
 // Status represents a GitHub Commit Status.
@@ -122,33 +121,55 @@ func (cr *GitHubCommitResolver) Resolve(repo, short string) (string, error) {
 	return *cm.SHA, nil
 }
 
-// StatusesService provides a convenient server for creating new commit
-// statuses.
-type StatusesService struct {
+// Quayd provides a Handle method for adding a GitHub Commit Status and tagging
+// the docker image.
+type Quayd struct {
 	StatusesRepository
 	CommitResolver
 }
 
-// NewStatusesService builds a new StatusesService backed by GitHub.
-func NewStatusesService(c *github.Client) *StatusesService {
-	return &StatusesService{
-		StatusesRepository: &GitHubStatusesRepository{c.Repositories},
-		CommitResolver:     &GitHubCommitResolver{c.Repositories},
+// New returns a new Quayd instance backed by GitHub implementations.
+func New(token string) *Quayd {
+	t := &oauth.Transport{
+		Token: &oauth.Token{AccessToken: token},
+	}
+
+	gh := github.NewClient(t.Client())
+
+	return &Quayd{
+		StatusesRepository: &GitHubStatusesRepository{gh.Repositories},
+		CommitResolver:     &GitHubCommitResolver{gh.Repositories},
 	}
 }
 
-// Create resolves the ref to a full sha, then creates a new GitHub commit
-// status for that sha.
-func (s *StatusesService) Create(repo, ref, state string) error {
-	sha, err := s.Resolve(repo, ref)
+// Handle resolves the ref to a full 40 character sha, then creates a new GitHub
+// Commit Status for that sha.
+func (q *Quayd) Handle(repo, ref, state string) error {
+	sha, err := q.commitResolver().Resolve(repo, ref)
 	if err != nil {
 		return err
 	}
 
-	return s.StatusesRepository.Create(&Status{
+	return q.statusesRepository().Create(&Status{
 		Repo:    repo,
 		Ref:     sha,
 		State:   state,
 		Context: Context,
 	})
+}
+
+func (q *Quayd) commitResolver() CommitResolver {
+	if q.CommitResolver == nil {
+		return DefaultCommitResolver
+	}
+
+	return q.CommitResolver
+}
+
+func (q *Quayd) statusesRepository() StatusesRepository {
+	if q.StatusesRepository == nil {
+		return DefaultStatusesRepository
+	}
+
+	return q.StatusesRepository
 }

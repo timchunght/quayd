@@ -5,9 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"code.google.com/p/goauth2/oauth"
-
-	"github.com/ejholmes/go-github/github"
 	"github.com/remind101/quayd"
 )
 
@@ -18,12 +15,8 @@ func main() {
 	)
 	flag.Parse()
 
-	t := &oauth.Transport{
-		Token: &oauth.Token{AccessToken: *token},
-	}
-
-	gh := github.NewClient(t.Client())
-	s := quayd.NewServer(quayd.NewStatusesService(gh))
+	q := quayd.New(*token)
+	s := quayd.NewServer(q)
 
 	log.Fatal(http.ListenAndServe(":"+*port, s))
 }
