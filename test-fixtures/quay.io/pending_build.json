@@ -1,0 +1,13 @@
+{
+  "build_id": "077f3664-35d3-48e6-9da7-889f9be73070",
+  "trigger_kind": "github",
+  "name": "docker-statsd",
+  "repository": "ejholmes/docker-statsd",
+  "namespace": "ejholmes",
+  "docker_url": "quay.io/ejholmes/docker-statsd",
+  "visibility": "public",
+  "docker_tags": ["test"],
+  "build_name": "f1fb3b0",
+  "trigger_id": "ffcbfaef-c7fe-4721-b69e-2e78fb6d29d5",
+  "homepage": "https://quay.io/repository/ejholmes/docker-statsd/build?current=077f3664-35d3-48e6-9da7-889f9be73070"
+}

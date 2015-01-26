@@ -2,13 +2,22 @@ package quayd
 
 import (
 	"bytes"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 )
 
-var body = `{"build_id": "077f3664-35d3-48e6-9da7-889f9be73070", "trigger_kind": "github", "name": "docker-statsd", "repository": "ejholmes/docker-statsd", "namespace": "ejholmes", "docker_url": "quay.io/ejholmes/docker-statsd", "visibility": "public", "docker_tags": ["test"], "build_name": "f1fb3b0", "trigger_id": "ffcbfaef-c7fe-4721-b69e-2e78fb6d29d5", "homepage": "https://quay.io/repository/ejholmes/docker-statsd/build?current=077f3664-35d3-48e6-9da7-889f9be73070"}`
+func loadFixture(fixture string, t testing.TB) io.Reader {
+	body, err := ioutil.ReadFile("test-fixtures/quay.io/" + fixture + ".json")
+	if err != nil {
+		t.Fatalf("Unable to load fixture %s: %s", fixture, err)
+	}
+
+	return bytes.NewReader(body)
+}
 
 func TestWebhook(t *testing.T) {
 	r := DefaultStatusesRepository
@@ -17,18 +26,18 @@ func TestWebhook(t *testing.T) {
 
 	tests := []struct {
 		status   string
-		body     string
+		fixture  string
 		expected Status
 	}{
-		{"pending", body, Status{Repo: "ejholmes/docker-statsd", Ref: "long-f1fb3b0", State: "pending", Context: "docker"}},
-		{"success", body, Status{Repo: "ejholmes/docker-statsd", Ref: "long-f1fb3b0", State: "success", Context: "docker"}},
+		{"pending", "pending_build", Status{Repo: "ejholmes/docker-statsd", Ref: "long-f1fb3b0", State: "pending", Context: "docker"}},
+		{"success", "pending_build", Status{Repo: "ejholmes/docker-statsd", Ref: "long-f1fb3b0", State: "success", Context: "docker"}},
 	}
 
 	for _, tt := range tests {
 		r.Reset()
 
 		resp := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/quay/"+tt.status, bytes.NewBufferString(tt.body))
+		req, _ := http.NewRequest("POST", "/quay/"+tt.status, loadFixture(tt.fixture, t))
 
 		s.ServeHTTP(resp, req)
 
@@ -47,7 +56,7 @@ func TestWebhook_InvalidStatus(t *testing.T) {
 	s := NewServer(nil)
 
 	resp := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/quay/foo", bytes.NewBufferString(body))
+	req, _ := http.NewRequest("POST", "/quay/foo", loadFixture("pending_build", t))
 
 	s.ServeHTTP(resp, req)
 
