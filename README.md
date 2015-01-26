@@ -1,4 +1,4 @@
-# Quayd
+# Quayd [![Build Status](https://travis-ci.org/remind101/quayd.svg?branch=master)](https://travis-ci.org/remind101/quayd)
 
 Quayd extends the Quay.io <-> GitHub integration. It:
 
