@@ -131,8 +131,8 @@ func (cr *GitHubCommitResolver) Resolve(repo, short string) (string, error) {
 
 // Tagger is an interface for tagging a docker image with a tag.
 type Tagger interface {
-	// Tag tags the build with the given tag.
-	Tag(build, tag string) error
+	// Tag tags the imageID with the given tag.
+	Tag(imageID, tag string) error
 }
 
 // tagger is a fake implementation of the Tagger interface.
@@ -141,12 +141,12 @@ type tagger struct {
 }
 
 // Tag implements Tagger Tag.
-func (t *tagger) Tag(build, tag string) error {
+func (t *tagger) Tag(imageID, tag string) error {
 	if t.tags == nil {
 		t.tags = make(map[string]string)
 	}
 
-	t.tags[build] = tag
+	t.tags[imageID] = tag
 
 	return nil
 }
