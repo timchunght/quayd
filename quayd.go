@@ -163,6 +163,17 @@ func (r *tagResolver) Resolve(tag string) (string, error) {
 	return "1234", nil
 }
 
+// DockerTagResolver is an implementation of the TagResolver that resolves an
+// image tag to a docker image id, using the docker api.
+type DockerTagResolver struct {
+	// TODO
+}
+
+func (r *DockerTagResolver) Resolve(tag string) (string, error) {
+	// TODO Something with the docker api
+	return "", nil
+}
+
 // Quayd provides a Handle method for adding a GitHub Commit Status and tagging
 // the docker image.
 type Quayd struct {
