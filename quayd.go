@@ -125,6 +125,16 @@ type StatusesService struct {
 	CommitResolver
 }
 
+// NewStatusesService builds a new StatusesService backed by GitHub.
+func NewStatusesService(c *github.Client) *StatusesService {
+	return &StatusesService{
+		StatusesRepository: &GitHubStatusesRepository{c},
+		CommitResolver:     &GitHubCommitResolver{c},
+	}
+}
+
+// Create resolves the ref to a full sha, then creates a new GitHub commit
+// status for that sha.
 func (s *StatusesService) Create(repo, ref, state string) error {
 	sha, err := s.Resolve(repo, ref)
 	if err != nil {

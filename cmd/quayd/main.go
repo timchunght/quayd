@@ -16,16 +16,14 @@ func main() {
 		port  = flag.String("port", "8080", "The port to run the server on.")
 		token = flag.String("github-token", "", "The GitHub API Token to use when creating commit statuses.")
 	)
+	flag.Parse()
 
 	t := &oauth.Transport{
 		Token: &oauth.Token{AccessToken: *token},
 	}
 
 	gh := github.NewClient(t.Client())
-	s := quayd.NewServer(&quayd.StatusesService{
-		StatusesRepository: &quayd.GitHubStatusesRepository{gh},
-		CommitResolver:     &quayd.GitHubCommitResolver{gh},
-	})
+	s := quayd.NewServer(quayd.NewStatusesService(gh))
 
 	log.Fatal(http.ListenAndServe(":"+*port, s))
 }
