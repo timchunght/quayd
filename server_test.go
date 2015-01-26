@@ -29,8 +29,8 @@ func TestWebhook(t *testing.T) {
 		fixture  string
 		expected Status
 	}{
-		{"pending", "pending_build", Status{Repo: "ejholmes/docker-statsd", Ref: "long-f1fb3b0", State: "pending", Context: "docker"}},
-		{"success", "pending_build", Status{Repo: "ejholmes/docker-statsd", Ref: "long-f1fb3b0", State: "success", Context: "docker"}},
+		{"pending", "pending_build", Status{Repo: "ejholmes/docker-statsd", Ref: "long-f1fb3b0", State: "pending", Context: "Docker Image"}},
+		{"success", "pending_build", Status{Repo: "ejholmes/docker-statsd", Ref: "long-f1fb3b0", State: "success", Context: "Docker Image"}},
 	}
 
 	for _, tt := range tests {

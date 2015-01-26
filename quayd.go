@@ -7,9 +7,18 @@ import (
 )
 
 var (
+	// Context is the string that will be displayed when showing the commit
+	// status.
+	Context = "Docker Image"
+
+	// DefaultStatusesRepository is the default StatusesRepository to use.
 	DefaultStatusesRepository = &FakeStatusesRepository{}
-	DefaultCommitResolver     = &FakeCommitResolver{}
-	DefaultStatusesService    = &StatusesService{
+
+	// DefaultCommitResolver is the default CommitResolver to use.
+	DefaultCommitResolver = &FakeCommitResolver{}
+
+	// DefaultStatusesService is the default StatusesService to use.
+	DefaultStatusesService = &StatusesService{
 		StatusesRepository: DefaultStatusesRepository,
 		CommitResolver:     DefaultCommitResolver,
 	}
@@ -126,6 +135,6 @@ func (s *StatusesService) Create(repo, ref, state string) error {
 		Repo:    repo,
 		Ref:     sha,
 		State:   state,
-		Context: "docker",
+		Context: Context,
 	})
 }
