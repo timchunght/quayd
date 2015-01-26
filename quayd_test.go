@@ -11,7 +11,7 @@ func testGitHubStatusesRepository(t *testing.T) {
 	repo := "ejholmes/docker-statsd"
 
 	g := github.NewClient(nil)
-	r := &GitHubStatusesRepository{Client: g}
+	r := &GitHubStatusesRepository{RepositoriesService: g.Repositories}
 
 	s := &Status{Repo: repo, Ref: "6607c19", State: "pending", Context: "test"}
 
@@ -33,7 +33,7 @@ func TestGitHubCommitResolver(t *testing.T) {
 
 	for _, tt := range tests {
 		g := github.NewClient(nil)
-		r := &GitHubCommitResolver{Client: g}
+		r := &GitHubCommitResolver{RepositoriesService: g.Repositories}
 
 		sha, err := r.Resolve(repo, tt.in)
 		if err != nil {

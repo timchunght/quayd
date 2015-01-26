@@ -59,7 +59,9 @@ func (r *FakeStatusesRepository) Reset() {
 // GitHubStatusesRepository is an implementation of the StatusesRepository
 // interface backed by a github.Client.
 type GitHubStatusesRepository struct {
-	*github.Client
+	RepositoriesService interface {
+		CreateStatus(owner, repo, ref string, status *github.RepoStatus) (*github.RepoStatus, *github.Response, error)
+	}
 }
 
 // Create implements StatusesRepository Create.
@@ -72,7 +74,7 @@ func (r *GitHubStatusesRepository) Create(status *Status) error {
 	// Split `owner/repo` into ["owner", "repo"].
 	c := strings.Split(status.Repo, "/")
 
-	_, _, err := r.Client.Repositories.CreateStatus(
+	_, _, err := r.RepositoriesService.CreateStatus(
 		c[0],
 		c[1],
 		status.Ref,
@@ -98,7 +100,9 @@ func (cr *FakeCommitResolver) Resolve(repo, short string) (string, error) {
 // GitHubCommitResolver is an implementation of CommitResolver backed by a
 // github.Client.
 type GitHubCommitResolver struct {
-	*github.Client
+	RepositoriesService interface {
+		GetCommit(owner, repo, sha string) (*github.RepositoryCommit, *github.Response, error)
+	}
 }
 
 // Resolve implements CommitResolver Resolve.
@@ -106,7 +110,7 @@ func (cr *GitHubCommitResolver) Resolve(repo, short string) (string, error) {
 	// Split `owner/repo` into ["owner", "repo"].
 	c := strings.Split(repo, "/")
 
-	cm, _, err := cr.Client.Repositories.GetCommit(
+	cm, _, err := cr.RepositoriesService.GetCommit(
 		c[0],
 		c[1],
 		short,
@@ -128,8 +132,8 @@ type StatusesService struct {
 // NewStatusesService builds a new StatusesService backed by GitHub.
 func NewStatusesService(c *github.Client) *StatusesService {
 	return &StatusesService{
-		StatusesRepository: &GitHubStatusesRepository{c},
-		CommitResolver:     &GitHubCommitResolver{c},
+		StatusesRepository: &GitHubStatusesRepository{c.Repositories},
+		CommitResolver:     &GitHubCommitResolver{c.Repositories},
 	}
 }
 
