@@ -32,6 +32,7 @@ type Webhook struct {
 type WebhookForm struct {
 	Repository  string `json:"repository"`
 	TriggerKind string `json:"trigger_kind"`
+	IsManual    bool   `json:"is_manual"`
 	BuildName   string `json:"build_name"`
 }
 
@@ -48,6 +49,12 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
 		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	// We don't want to process manually triggered builds.
+	if !(!form.IsManual && form.TriggerKind == "github") {
+		w.WriteHeader(204)
 		return
 	}
 

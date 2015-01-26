@@ -64,3 +64,17 @@ func TestWebhook_InvalidStatus(t *testing.T) {
 		t.Fatal("Expected 0 commit statuses")
 	}
 }
+
+func TestWebhook_ManualTrigger(t *testing.T) {
+	r := DefaultStatusesRepository
+	s := NewServer(nil)
+
+	resp := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/quay/pending", loadFixture("pending_build.manual", t))
+
+	s.ServeHTTP(resp, req)
+
+	if len(r.statuses) != 0 {
+		t.Fatal("Expected 0 commit statuses")
+	}
+}

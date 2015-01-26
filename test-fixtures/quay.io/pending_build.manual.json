@@ -1,0 +1,12 @@
+{
+  "build_id": "29bee14a-6e79-4d43-8ee5-b130dcb2530a",
+  "name": "docker-statsd",
+  "repository": "ejholmes/docker-statsd",
+  "namespace": "ejholmes",
+  "docker_url": "quay.io/ejholmes/docker-statsd",
+  "visibility": "public",
+  "docker_tags": ["test"],
+  "build_name": "ce44f24",
+  "is_manual": true,
+  "homepage": "https://quay.io/repository/ejholmes/docker-statsd/build?current=29bee14a-6e79-4d43-8ee5-b130dcb2530a"
+}
