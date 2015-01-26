@@ -19,6 +19,9 @@ var (
 	// DefaultCommitResolver is the default CommitResolver to use.
 	DefaultCommitResolver = &commitResolver{}
 
+	// DefaultTagger is the default Tagger to use.
+	DefaultTagger = &tagger{}
+
 	// Default is the default Quayd to use.
 	Default = &Quayd{}
 )
@@ -34,6 +37,7 @@ type Status struct {
 // StatusesRepository is an interface that can be implemented for creating
 // Commit Statuses.
 type StatusesRepository interface {
+	// Create creates a GitHub Commit Status.
 	Create(*Status) error
 }
 
@@ -85,6 +89,7 @@ func (r *GitHubStatusesRepository) Create(status *Status) error {
 // CommitResolver is an interface for resolving a short sha to a full 40
 // character sha.
 type CommitResolver interface {
+	// Resolve resolves the short sha to a full 40 character sha.
 	Resolve(repo, short string) (string, error)
 }
 
@@ -121,11 +126,34 @@ func (cr *GitHubCommitResolver) Resolve(repo, short string) (string, error) {
 	return *cm.SHA, nil
 }
 
+// Tagger is an interface for tagging a docker image with a tag.
+type Tagger interface {
+	// Tag tags the build with the given tag.
+	Tag(build, tag string) error
+}
+
+// tagger is a fake implementation of the Tagger interface.
+type tagger struct {
+	Tags map[string]string
+}
+
+// Tag implements Tagger Tag.
+func (t *tagger) Tag(build, tag string) error {
+	if t.Tags == nil {
+		t.Tags = make(map[string]string)
+	}
+
+	t.Tags[build] = tag
+
+	return nil
+}
+
 // Quayd provides a Handle method for adding a GitHub Commit Status and tagging
 // the docker image.
 type Quayd struct {
 	StatusesRepository
 	CommitResolver
+	Tagger
 }
 
 // New returns a new Quayd instance backed by GitHub implementations.
@@ -172,4 +200,12 @@ func (q *Quayd) statusesRepository() StatusesRepository {
 	}
 
 	return q.StatusesRepository
+}
+
+func (q *Quayd) tagger() Tagger {
+	if q.Tagger == nil {
+		q.Tagger = DefaultTagger
+	}
+
+	return q.Tagger
 }
