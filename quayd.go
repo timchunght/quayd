@@ -14,10 +14,10 @@ var (
 	Context = "Docker Image"
 
 	// DefaultStatusesRepository is the default StatusesRepository to use.
-	DefaultStatusesRepository = &FakeStatusesRepository{}
+	DefaultStatusesRepository = &statusesRepository{}
 
 	// DefaultCommitResolver is the default CommitResolver to use.
-	DefaultCommitResolver = &FakeCommitResolver{}
+	DefaultCommitResolver = &commitResolver{}
 
 	// Default is the default Quayd to use.
 	Default = &Quayd{}
@@ -37,22 +37,22 @@ type StatusesRepository interface {
 	Create(*Status) error
 }
 
-// FakeStatusesRepository is a fake implementation of the StatusesRepository
+// statusesRepository is a fake implementation of the StatusesRepository
 // interface.
-type FakeStatusesRepository struct {
-	Statuses []*Status
+type statusesRepository struct {
+	statuses []*Status
 }
 
 // Create implements StatusesRepository Create.
-func (r *FakeStatusesRepository) Create(status *Status) error {
-	r.Statuses = append(r.Statuses, status)
+func (r *statusesRepository) Create(status *Status) error {
+	r.statuses = append(r.statuses, status)
 
 	return nil
 }
 
 // Reset resets the collection of Statuses.
-func (r *FakeStatusesRepository) Reset() {
-	r.Statuses = nil
+func (r *statusesRepository) Reset() {
+	r.statuses = nil
 }
 
 // GitHubStatusesRepository is an implementation of the StatusesRepository
@@ -88,11 +88,11 @@ type CommitResolver interface {
 	Resolve(repo, short string) (string, error)
 }
 
-// FakeCommitResolver returns the short sha prefixed with the string "long".
-type FakeCommitResolver struct{}
+// commitResolver returns the short sha prefixed with the string "long".
+type commitResolver struct{}
 
 // Resolve implements CommitResolver Resolve.
-func (cr *FakeCommitResolver) Resolve(repo, short string) (string, error) {
+func (cr *commitResolver) Resolve(repo, short string) (string, error) {
 	return "long-" + short, nil
 }
 

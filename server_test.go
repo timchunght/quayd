@@ -41,11 +41,11 @@ func TestWebhook(t *testing.T) {
 
 		s.ServeHTTP(resp, req)
 
-		if len(r.Statuses) != 1 {
+		if len(r.statuses) != 1 {
 			t.Fatal("Expected 1 commit status")
 		}
 
-		if got, want := r.Statuses[0], &tt.expected; !reflect.DeepEqual(got, want) {
+		if got, want := r.statuses[0], &tt.expected; !reflect.DeepEqual(got, want) {
 			t.Fatalf("Status => %q; want %q", got, want)
 		}
 	}
@@ -60,7 +60,7 @@ func TestWebhook_InvalidStatus(t *testing.T) {
 
 	s.ServeHTTP(resp, req)
 
-	if len(r.Statuses) != 0 {
+	if len(r.statuses) != 0 {
 		t.Fatal("Expected 0 commit statuses")
 	}
 }
