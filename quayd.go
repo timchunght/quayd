@@ -22,6 +22,9 @@ var (
 	// DefaultTagger is the default Tagger to use.
 	DefaultTagger = &tagger{}
 
+	// DefaultTagResovler is the default TagResolver to use.
+	DefaultTagResolver = &tagResolver{}
+
 	// Default is the default Quayd to use.
 	Default = &Quayd{}
 )
@@ -134,18 +137,30 @@ type Tagger interface {
 
 // tagger is a fake implementation of the Tagger interface.
 type tagger struct {
-	Tags map[string]string
+	tags map[string]string
 }
 
 // Tag implements Tagger Tag.
 func (t *tagger) Tag(build, tag string) error {
-	if t.Tags == nil {
-		t.Tags = make(map[string]string)
+	if t.tags == nil {
+		t.tags = make(map[string]string)
 	}
 
-	t.Tags[build] = tag
+	t.tags[build] = tag
 
 	return nil
+}
+
+// TagResolver resolves a docker tag to an image id.
+type TagResolver interface {
+	Resolve(tag string) (string, error)
+}
+
+// tagResolver is a fake implementation of the TagResolver interface.
+type tagResolver struct{}
+
+func (r *tagResolver) Resolve(tag string) (string, error) {
+	return "1234", nil
 }
 
 // Quayd provides a Handle method for adding a GitHub Commit Status and tagging
@@ -154,6 +169,7 @@ type Quayd struct {
 	StatusesRepository
 	CommitResolver
 	Tagger
+	TagResolver
 }
 
 // New returns a new Quayd instance backed by GitHub implementations.
@@ -186,6 +202,23 @@ func (q *Quayd) Handle(repo, ref, state string) error {
 	})
 }
 
+// TagImage takes a docker tag, resolves it to a image id, then tags it with the
+// given tag.
+func (q *Quayd) TagImage(tag, repo, ref string) error {
+	sha, err := q.commitResolver().Resolve(repo, ref)
+	if err != nil {
+		return err
+	}
+
+	// Something that resolves the `tag` into an image id.
+	imageID, err := q.tagResolver().Resolve(tag)
+	if err != nil {
+		return err
+	}
+
+	return q.tagger().Tag(imageID, sha)
+}
+
 func (q *Quayd) commitResolver() CommitResolver {
 	if q.CommitResolver == nil {
 		return DefaultCommitResolver
@@ -208,4 +241,12 @@ func (q *Quayd) tagger() Tagger {
 	}
 
 	return q.Tagger
+}
+
+func (q *Quayd) tagResolver() TagResolver {
+	if q.TagResolver == nil {
+		q.TagResolver = DefaultTagResolver
+	}
+
+	return q.TagResolver
 }

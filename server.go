@@ -30,10 +30,11 @@ type Webhook struct {
 }
 
 type WebhookForm struct {
-	Repository  string `json:"repository"`
-	TriggerKind string `json:"trigger_kind"`
-	IsManual    bool   `json:"is_manual"`
-	BuildName   string `json:"build_name"`
+	Repository  string   `json:"repository"`
+	TriggerKind string   `json:"trigger_kind"`
+	IsManual    bool     `json:"is_manual"`
+	DockerTags  []string `json:"docker_tags"`
+	BuildName   string   `json:"build_name"`
 }
 
 func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -56,6 +57,13 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !(!form.IsManual && form.TriggerKind == "github") {
 		w.WriteHeader(204)
 		return
+	}
+
+	if status == "success" {
+		if err := wh.Quayd.TagImage(form.DockerTags[0], form.Repository, form.BuildName); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
 	}
 
 	if err := wh.Quayd.Handle(form.Repository, form.BuildName, status); err != nil {
