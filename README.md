@@ -6,8 +6,14 @@ Quayd extends the Quay.io <-> GitHub integration. It:
    ![](https://s3.amazonaws.com/ejholmes.github.com/A72Nj.png)
 2. Tags the Quay.io build with the git sha.
 
-**TODO**
+## Usage
 
-* GitHub backend implementation of StatusesRepository.
-* GitHub backend implementation of CommitResolver.
-* Command.
+Run quayd to start the server, providing it with a github api token that has the **repo** scope.
+
+```console
+$ quayd -port=8080 -github-token=1234
+```
+
+Now, create some webhooks on Quay.io that POST to "/quayd/\<status\>"
+
+![](https://s3.amazonaws.com/ejholmes.github.com/0mIUw.png)
