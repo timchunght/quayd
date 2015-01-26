@@ -6,6 +6,10 @@ Quayd extends the Quay.io <-> GitHub integration. It:
    ![](https://s3.amazonaws.com/ejholmes.github.com/A72Nj.png)
 2. Tags the Quay.io build with the git sha.
 
+**TODO**
+
+Tag the quay.io image.
+
 ## Usage
 
 Run quayd to start the server, providing it with a github api token that has the **repo** scope.
