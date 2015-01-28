@@ -6,6 +6,11 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "code.google.com/p/goauth2/oauth",
+			"Comment": "weekly-48",
+			"Rev": "6a3615e294b534a1c24cb5d3d7570fa8bbc30c99"
+		},
+		{
 			"ImportPath": "github.com/ejholmes/go-github/github",
 			"Rev": "338b5192fc07b2eff030f73d98aca1408642d8c9"
 		},
