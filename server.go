@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"net/http"
+	"fmt"
 )
 
 var validStatuses = []string{"pending", "success", "error", "failure"}
@@ -34,12 +35,13 @@ type WebhookForm struct {
 	IsManual    bool     `json:"is_manual"`
 	DockerTags  []string `json:"docker_tags"`
 	BuildName   string   `json:"build_name"`
+	BuildURL    string   `json:"homepage"`
 }
 
 func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	status := vars["status"]
-
+	fmt.Println("Testing")
 	if !validStatus(status) {
 		http.Error(w, "Invalid status: "+status, 400)
 		return
@@ -54,8 +56,8 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// We don't want to process manually triggered builds.
 	if !(!form.IsManual && form.TriggerKind == "github") {
-		w.WriteHeader(204)
-		return
+		//w.WriteHeader(204)
+		//return
 	}
 
 	if status == "success" {
@@ -64,7 +66,7 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if err := wh.Quayd.Handle(form.Repository, form.BuildName, status); err != nil {
+	if err := wh.Quayd.Handle(&form, status); err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}

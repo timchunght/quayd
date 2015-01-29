@@ -4,6 +4,7 @@ import (
 	"code.google.com/p/goauth2/oauth"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/ejholmes/go-github/github"
 	"net/http"
 	"strings"
@@ -28,14 +29,22 @@ var (
 
 	// Default is the default Quayd to use.
 	Default = &Quayd{}
+
+	Statuses = map[string]string{
+		"pending": "Quay: Image Building",
+		"success": "Quay: Image Built",
+		"failure": "Quay: Build Failed",
+	}
 )
 
 // Status represents a GitHub Commit Status.
 type Status struct {
-	Repo    string
-	Ref     string
-	State   string
-	Context string
+	Repo        string
+	Ref         string
+	State       string
+	Context     string
+	TargetURL   string
+	Description string
 }
 
 // StatusesRepository is an interface that can be implemented for creating
@@ -73,13 +82,17 @@ type GitHubStatusesRepository struct {
 
 // Create implements StatusesRepository Create.
 func (r *GitHubStatusesRepository) Create(status *Status) error {
+
 	st := &github.RepoStatus{
-		State:   &status.State,
-		Context: &status.Context,
+		State:       &status.State,
+		TargetURL:   &status.TargetURL,
+		Context:     &status.Context,
+		Description: &status.Description,
 	}
 
 	// Split `owner/repo` into ["owner", "repo"].
 	c := strings.Split(status.Repo, "/")
+	fmt.Println()
 
 	_, _, err := r.RepositoriesService.CreateStatus(
 		c[0],
@@ -208,13 +221,13 @@ type Quayd struct {
 }
 
 // New returns a new Quayd instance backed by GitHub implementations.
-func New(token, registry_auth string) *Quayd {
+func New(token, registryAuth string) *Quayd {
 	t := &oauth.Transport{
 		Token: &oauth.Token{AccessToken: token},
 	}
 
 	gh := github.NewClient(t.Client())
-	auth := strings.Split(registry_auth, ":")
+	auth := strings.Split(registryAuth, ":")
 	return &Quayd{
 		StatusesRepository: &GitHubStatusesRepository{gh.Repositories},
 		CommitResolver:     &GitHubCommitResolver{gh.Repositories},
@@ -227,17 +240,19 @@ func New(token, registry_auth string) *Quayd {
 
 // Handle resolves the ref to a full 40 character sha, then creates a new GitHub
 // Commit Status for that sha.
-func (q *Quayd) Handle(repo, ref, state string) error {
-	sha, err := q.commitResolver().Resolve(repo, ref)
+func (q *Quayd) Handle(form *WebhookForm, state string) error {
+	sha, err := q.commitResolver().Resolve(form.Repository, form.BuildName)
 	if err != nil {
 		return err
 	}
 
 	return q.statusesRepository().Create(&Status{
-		Repo:    repo,
-		Ref:     sha,
-		State:   state,
-		Context: Context,
+		Repo:        form.Repository,
+		TargetURL:   form.BuildURL,
+		Ref:         sha,
+		State:       state,
+		Description: Statuses[state],
+		Context:     Context,
 	})
 }
 
