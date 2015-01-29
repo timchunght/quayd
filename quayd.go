@@ -2,8 +2,10 @@ package quayd
 
 import (
 	"code.google.com/p/goauth2/oauth"
-
+	"encoding/json"
 	"github.com/ejholmes/go-github/github"
+	"net/http"
+	"strings"
 )
 
 var (
@@ -114,7 +116,6 @@ type GitHubCommitResolver struct {
 func (cr *GitHubCommitResolver) Resolve(repo, short string) (string, error) {
 	// Split `owner/repo` into ["owner", "repo"].
 	c := strings.Split(repo, "/")
-
 	cm, _, err := cr.RepositoriesService.GetCommit(
 		c[0],
 		c[1],
@@ -123,53 +124,71 @@ func (cr *GitHubCommitResolver) Resolve(repo, short string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return *cm.SHA, nil
 }
 
 // Tagger is an interface for tagging a docker image with a tag.
 type Tagger interface {
 	// Tag tags the imageID with the given tag.
-	Tag(imageID, tag string) error
+	Tag(repo, imageID, tag string) error
 }
 
 // tagger is a fake implementation of the Tagger interface.
 type tagger struct {
-	tags map[string]string
 }
 
 // Tag implements Tagger Tag.
-func (t *tagger) Tag(imageID, tag string) error {
-	if t.tags == nil {
-		t.tags = make(map[string]string)
-	}
-
-	t.tags[imageID] = tag
-
+func (t *tagger) Tag(repo, imageID, tag string) error {
 	return nil
 }
 
+type DockerTagger struct {
+	username	string
+	password	string
+}
+
+func (dt *DockerTagger) Tag(repo, imageID, tag string) error {
+	req, err := http.NewRequest("PUT",
+		"https://quay.io/v1/repositories/" + repo + "/tags/" + tag,
+		strings.NewReader(`"`+imageID+`"`))
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.SetBasicAuth(dt.username, dt.password)
+
+	_, err = http.DefaultClient.Do(req)
+	return err
+}
+
+
 // TagResolver resolves a docker tag to an image id.
 type TagResolver interface {
-	Resolve(tag string) (string, error)
+	Resolve(repo, tag string) (string, error)
 }
 
 // tagResolver is a fake implementation of the TagResolver interface.
 type tagResolver struct{}
 
-func (r *tagResolver) Resolve(tag string) (string, error) {
-	return "1234", nil
+func (r *tagResolver) Resolve(repo, tag string) (string, error) {
+	return "", nil
 }
 
 // DockerTagResolver is an implementation of the TagResolver that resolves an
 // image tag to a docker image id, using the docker api.
 type DockerTagResolver struct {
-	// TODO
 }
 
-func (r *DockerTagResolver) Resolve(tag string) (string, error) {
-	// TODO Something with the docker api
-	return "", nil
+func (r *DockerTagResolver) Resolve(repo, tag string) (string, error) {
+	resp, err := http.Get("https://quay.io/v1/repositories/" + repo + "/tags/" + tag)
+	if err != nil {
+		return "", err
+	}
+	var imageID string
+	if err := json.NewDecoder(resp.Body).Decode(&imageID); err != nil {
+		return "", err
+	}
+	return imageID, nil
 }
 
 // Quayd provides a Handle method for adding a GitHub Commit Status and tagging
@@ -182,16 +201,18 @@ type Quayd struct {
 }
 
 // New returns a new Quayd instance backed by GitHub implementations.
-func New(token string) *Quayd {
+func New(token, user_auth string) *Quayd {
 	t := &oauth.Transport{
 		Token: &oauth.Token{AccessToken: token},
 	}
 
 	gh := github.NewClient(t.Client())
-
+	quay_auth := strings.Split(user_auth, ":")
 	return &Quayd{
 		StatusesRepository: &GitHubStatusesRepository{gh.Repositories},
 		CommitResolver:     &GitHubCommitResolver{gh.Repositories},
+		TagResolver:        &DockerTagResolver{},
+		Tagger:				&DockerTagger{quay_auth[0], quay_auth[1]},
 	}
 }
 
@@ -211,21 +232,24 @@ func (q *Quayd) Handle(repo, ref, state string) error {
 	})
 }
 
-// TagImage takes a docker tag, resolves it to a image id, then tags it with the
-// given tag.
-func (q *Quayd) TagImage(tag, repo, ref string) error {
+// LoadImageTags locates a quay build from its repo and tag and adds
+// tags for the Image ID as well as the Git SHA
+func (q *Quayd) LoadImageTags(tag, repo, ref string) error {
 	sha, err := q.commitResolver().Resolve(repo, ref)
 	if err != nil {
 		return err
 	}
-
 	// Something that resolves the `tag` into an image id.
-	imageID, err := q.tagResolver().Resolve(tag)
+	imageID, err := q.tagResolver().Resolve(repo, tag)
 	if err != nil {
 		return err
 	}
+	err = q.tagger().Tag(repo, imageID, sha)
+	if err != nil {
+		return err
+	}
+	return q.tagger().Tag(repo, imageID, imageID)
 
-	return q.tagger().Tag(imageID, sha)
 }
 
 func (q *Quayd) commitResolver() CommitResolver {
