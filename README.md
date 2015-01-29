@@ -17,7 +17,3 @@ $ quayd -port=8080 -github-token=1234
 Now, create some webhooks on Quay.io that POST to "/quayd/\<status\>"
 
 ![](https://s3.amazonaws.com/ejholmes.github.com/0mIUw.png)
-
-## TODO
-
-* Tag the quay.io image with the git sha when quayd receives a webhook for a "success"'full Dockerfile build.
