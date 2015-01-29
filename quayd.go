@@ -208,13 +208,13 @@ type Quayd struct {
 }
 
 // New returns a new Quayd instance backed by GitHub implementations.
-func New(token, registry_auth string) *Quayd {
+func New(token, registryAuth string) *Quayd {
 	t := &oauth.Transport{
 		Token: &oauth.Token{AccessToken: token},
 	}
 
 	gh := github.NewClient(t.Client())
-	auth := strings.Split(registry_auth, ":")
+	auth := strings.Split(registryAuth, ":")
 	return &Quayd{
 		StatusesRepository: &GitHubStatusesRepository{gh.Repositories},
 		CommitResolver:     &GitHubCommitResolver{gh.Repositories},
