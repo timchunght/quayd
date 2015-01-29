@@ -78,3 +78,12 @@ func TestWebhook_ManualTrigger(t *testing.T) {
 		t.Fatal("Expected 0 commit statuses")
 	}
 }
+
+func TestWebhook_TagsImageID(t *testing.T) {
+	s := NewServer(nil)
+
+	resp := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/quay/success", loadFixture("pending_build", t))
+
+	s.ServeHTTP(resp, req)
+}

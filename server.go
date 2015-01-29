@@ -2,9 +2,8 @@ package quayd
 
 import (
 	"encoding/json"
-	"net/http"
-
 	"github.com/gorilla/mux"
+	"net/http"
 )
 
 var validStatuses = []string{"pending", "success", "error", "failure"}
@@ -30,10 +29,11 @@ type Webhook struct {
 }
 
 type WebhookForm struct {
-	Repository  string `json:"repository"`
-	TriggerKind string `json:"trigger_kind"`
-	IsManual    bool   `json:"is_manual"`
-	BuildName   string `json:"build_name"`
+	Repository  string   `json:"repository"`
+	TriggerKind string   `json:"trigger_kind"`
+	IsManual    bool     `json:"is_manual"`
+	DockerTags  []string `json:"docker_tags"`
+	BuildName   string   `json:"build_name"`
 }
 
 func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -58,10 +58,17 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if status == "success" {
+		if err := wh.Quayd.LoadImageTags(form.DockerTags[0], form.Repository, form.BuildName); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+	}
 	if err := wh.Quayd.Handle(form.Repository, form.BuildName, status); err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
+
 }
 
 func validStatus(a string) bool {
