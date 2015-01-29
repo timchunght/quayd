@@ -3,7 +3,6 @@ package quayd
 import (
 	"encoding/json"
 	"net/http"
-
 	"github.com/gorilla/mux"
 )
 
@@ -59,17 +58,18 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+
 	if status == "success" {
-		if err := wh.Quayd.TagImage(form.DockerTags[0], form.Repository, form.BuildName); err != nil {
+		if err := wh.Quayd.LoadImageTags(form.DockerTags[0], form.Repository, form.BuildName); err != nil {
 			http.Error(w, err.Error(), 500)
 			return
 		}
 	}
-
 	if err := wh.Quayd.Handle(form.Repository, form.BuildName, status); err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
+	
 }
 
 func validStatus(a string) bool {

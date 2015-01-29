@@ -1,8 +1,6 @@
 package quayd
 
 import (
-	"strings"
-
 	"code.google.com/p/goauth2/oauth"
 
 	"github.com/ejholmes/go-github/github"

@@ -10,12 +10,13 @@ import (
 
 func main() {
 	var (
-		port  = flag.String("port", "8080", "The port to run the server on.")
-		token = flag.String("github-token", "", "The GitHub API Token to use when creating commit statuses.")
+		port  		= flag.String("port", "8080", "The port to run the server on.")
+		token 		= flag.String("github-token", "", "The GitHub API Token to use when creating commit statuses.")
+		user 		= flat.String("u","", "The Quay username and password user:pass ")
 	)
 	flag.Parse()
 
-	q := quayd.New(*token)
+	q := quayd.New(*token, *user)
 	s := quayd.NewServer(q)
 
 	log.Fatal(http.ListenAndServe(":"+*port, s))
