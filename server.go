@@ -34,12 +34,12 @@ type WebhookForm struct {
 	IsManual    bool     `json:"is_manual"`
 	DockerTags  []string `json:"docker_tags"`
 	BuildName   string   `json:"build_name"`
+	BuildURL    string   `json:"homepage"`
 }
 
 func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	status := vars["status"]
-
 	if !validStatus(status) {
 		http.Error(w, "Invalid status: "+status, 400)
 		return
@@ -64,7 +64,7 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if err := wh.Quayd.Handle(form.Repository, form.BuildName, status); err != nil {
+	if err := wh.Quayd.Handle(form.Repository, form.BuildName, form.BuildURL, status); err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}

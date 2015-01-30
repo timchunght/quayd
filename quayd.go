@@ -28,14 +28,22 @@ var (
 
 	// Default is the default Quayd to use.
 	Default = &Quayd{}
+
+	Statuses = map[string]string{
+		"pending": "The Quay image is building",
+		"success": "The Quay image was built",
+		"failure": "The Quay image failed to build",
+	}
 )
 
 // Status represents a GitHub Commit Status.
 type Status struct {
-	Repo    string
-	Ref     string
-	State   string
-	Context string
+	Repo        string
+	Ref         string
+	State       string
+	Context     string
+	TargetURL   string
+	Description string
 }
 
 // StatusesRepository is an interface that can be implemented for creating
@@ -73,9 +81,12 @@ type GitHubStatusesRepository struct {
 
 // Create implements StatusesRepository Create.
 func (r *GitHubStatusesRepository) Create(status *Status) error {
+
 	st := &github.RepoStatus{
-		State:   &status.State,
-		Context: &status.Context,
+		State:       &status.State,
+		TargetURL:   &status.TargetURL,
+		Context:     &status.Context,
+		Description: &status.Description,
 	}
 
 	// Split `owner/repo` into ["owner", "repo"].
@@ -227,17 +238,19 @@ func New(token, registryAuth string) *Quayd {
 
 // Handle resolves the ref to a full 40 character sha, then creates a new GitHub
 // Commit Status for that sha.
-func (q *Quayd) Handle(repo, ref, state string) error {
+func (q *Quayd) Handle(repo, ref, url, state string) error {
 	sha, err := q.commitResolver().Resolve(repo, ref)
 	if err != nil {
 		return err
 	}
 
 	return q.statusesRepository().Create(&Status{
-		Repo:    repo,
-		Ref:     sha,
-		State:   state,
-		Context: Context,
+		Repo:        repo,
+		TargetURL:   url,
+		Ref:         sha,
+		State:       state,
+		Description: Statuses[state],
+		Context:     Context,
 	})
 }
 
