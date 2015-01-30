@@ -54,8 +54,8 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// We don't want to process manually triggered builds.
 	if !(!form.IsManual && form.TriggerKind == "github") {
-		//w.WriteHeader(204)
-		//return
+		w.WriteHeader(204)
+		return
 	}
 
 	if status == "success" {
@@ -64,7 +64,7 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if err := wh.Quayd.Handle(&form, status); err != nil {
+	if err := wh.Quayd.Handle(form.Repository, form.BuildName, form.BuildURL, status); err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}

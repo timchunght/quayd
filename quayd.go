@@ -238,15 +238,15 @@ func New(token, registryAuth string) *Quayd {
 
 // Handle resolves the ref to a full 40 character sha, then creates a new GitHub
 // Commit Status for that sha.
-func (q *Quayd) Handle(form *WebhookForm, state string) error {
-	sha, err := q.commitResolver().Resolve(form.Repository, form.BuildName)
+func (q *Quayd) Handle(repo, ref, url, state string) error {
+	sha, err := q.commitResolver().Resolve(repo, ref)
 	if err != nil {
 		return err
 	}
 
 	return q.statusesRepository().Create(&Status{
-		Repo:        form.Repository,
-		TargetURL:   form.BuildURL,
+		Repo:        repo,
+		TargetURL:   url,
 		Ref:         sha,
 		State:       state,
 		Description: Statuses[state],
