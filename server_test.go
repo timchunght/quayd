@@ -29,8 +29,8 @@ func TestWebhook(t *testing.T) {
 		fixture  string
 		expected Status
 	}{
-		{"pending", "pending_build", Status{Repo: "ejholmes/docker-statsd", Ref: "long-f1fb3b0", State: "pending", Context: "Docker Image", TargetURL: "https://quay.io/repository/ejholmes/docker-statsd/build?current=077f3664-35d3-48e6-9da7-889f9be73070", Description: "The Quay image is building"}},
-		{"success", "pending_build", Status{Repo: "ejholmes/docker-statsd", Ref: "long-f1fb3b0", State: "success", Context: "Docker Image", TargetURL: "https://quay.io/repository/ejholmes/docker-statsd/build?current=077f3664-35d3-48e6-9da7-889f9be73070", Description: "The Quay image was built"}},
+		{"pending", "pending_build", Status{Repo: "ejholmes/docker-statsd", Ref: "long-f1fb3b0", State: "pending", Context: "Docker Image", TargetURL: "https://quay.io/repository/ejholmes/docker-statsd/build?current=077f3664-35d3-48e6-9da7-889f9be73070", Description: "The Docker image is building"}},
+		{"success", "pending_build", Status{Repo: "ejholmes/docker-statsd", Ref: "long-f1fb3b0", State: "success", Context: "Docker Image", TargetURL: "https://quay.io/repository/ejholmes/docker-statsd/build?current=077f3664-35d3-48e6-9da7-889f9be73070", Description: "The Docker image was built"}},
 	}
 
 	for _, tt := range tests {

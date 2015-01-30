@@ -1,12 +1,13 @@
 package quayd
 
 import (
-	"code.google.com/p/goauth2/oauth"
 	"encoding/json"
 	"errors"
-	"github.com/ejholmes/go-github/github"
 	"net/http"
 	"strings"
+
+	"code.google.com/p/goauth2/oauth"
+	"github.com/ejholmes/go-github/github"
 )
 
 var (
@@ -30,9 +31,9 @@ var (
 	Default = &Quayd{}
 
 	Statuses = map[string]string{
-		"pending": "The Quay image is building",
-		"success": "The Quay image was built",
-		"failure": "The Quay image failed to build",
+		"pending": "The Docker image is building",
+		"success": "The Docker image was built",
+		"failure": "The Docker image failed to build",
 	}
 )
 
