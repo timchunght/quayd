@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"net/http"
-	"fmt"
 )
 
 var validStatuses = []string{"pending", "success", "error", "failure"}
@@ -41,7 +40,6 @@ type WebhookForm struct {
 func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	status := vars["status"]
-	fmt.Println("Testing")
 	if !validStatus(status) {
 		http.Error(w, "Invalid status: "+status, 400)
 		return

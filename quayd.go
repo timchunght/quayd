@@ -4,7 +4,6 @@ import (
 	"code.google.com/p/goauth2/oauth"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/ejholmes/go-github/github"
 	"net/http"
 	"strings"
@@ -31,9 +30,9 @@ var (
 	Default = &Quayd{}
 
 	Statuses = map[string]string{
-		"pending": "Quay: Image Building",
-		"success": "Quay: Image Built",
-		"failure": "Quay: Build Failed",
+		"pending": "The Quay image is building",
+		"success": "The Quay image was built",
+		"failure": "The Quay image failed to build",
 	}
 )
 
@@ -92,7 +91,6 @@ func (r *GitHubStatusesRepository) Create(status *Status) error {
 
 	// Split `owner/repo` into ["owner", "repo"].
 	c := strings.Split(status.Repo, "/")
-	fmt.Println()
 
 	_, _, err := r.RepositoriesService.CreateStatus(
 		c[0],
