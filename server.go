@@ -2,6 +2,7 @@ package quayd
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/codegangsta/negroni"
@@ -53,7 +54,7 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var form WebhookForm
 
 	if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
-		http.Error(w, err.Error(), 500)
+		errorResponse(w, err)
 		return
 	}
 
@@ -65,12 +66,12 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if status == "success" {
 		if err := wh.Quayd.LoadImageTags(form.DockerTags[0], form.Repository, form.BuildName); err != nil {
-			http.Error(w, err.Error(), 500)
+			errorResponse(w, err)
 			return
 		}
 	}
 	if err := wh.Quayd.Handle(form.Repository, form.BuildName, form.BuildURL, status); err != nil {
-		http.Error(w, err.Error(), 500)
+		errorResponse(w, err)
 		return
 	}
 
@@ -83,4 +84,9 @@ func validStatus(a string) bool {
 		}
 	}
 	return false
+}
+
+func errorResponse(w http.ResponseWriter, err error) {
+	fmt.Println(err)
+	http.Error(w, err.Error(), 500)
 }
