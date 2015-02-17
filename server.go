@@ -2,8 +2,10 @@ package quayd
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"net/http"
+
+	"github.com/codegangsta/negroni"
+	"github.com/gorilla/mux"
 )
 
 var validStatuses = []string{"pending", "success", "error", "failure"}
@@ -21,7 +23,10 @@ func NewServer(q *Quayd) *Server {
 
 	m.Handle("/quay/{status}", &Webhook{q}).Methods("POST")
 
-	return &Server{m}
+	n := negroni.Classic()
+	n.UseHandler(m)
+
+	return &Server{n}
 }
 
 type Webhook struct {
