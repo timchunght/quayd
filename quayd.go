@@ -1,13 +1,13 @@
 package quayd
 
 import (
+	// "code.google.com/p/goauth2/oauth"
 	"encoding/json"
 	"errors"
-	"net/http"
-	"strings"
-	// "code.google.com/p/goauth2/oauth"
 	"github.com/ejholmes/go-github/github"
 	"golang.org/x/oauth2"
+	"net/http"
+	"strings"
 )
 
 var (
@@ -219,13 +219,26 @@ type Quayd struct {
 	TagResolver
 }
 
+type TokenSource struct {
+	AccessToken string
+}
+
+func (t *TokenSource) Token() (*oauth2.Token, error) {
+	token := &oauth2.Token{
+		AccessToken: t.AccessToken,
+	}
+	return token, nil
+}
+
 // New returns a new Quayd instance backed by GitHub implementations.
 func New(token, registryAuth string) *Quayd {
-	t := &oauth.Transport{
-		Token: &oauth.Token{AccessToken: token},
-	}
 
-	gh := github.NewClient(t.Client())
+	tokenSource := &TokenSource{
+		AccessToken: token,
+	}
+	oauthClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
+
+	gh := github.NewClient(oauthClient)
 	auth := strings.Split(registryAuth, ":")
 	return &Quayd{
 		StatusesRepository: &GitHubStatusesRepository{gh.Repositories},
