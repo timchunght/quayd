@@ -272,18 +272,19 @@ func (q *Quayd) Handle(repo, ref, url, state string) error {
 // tags for the Image ID as well as the Git SHA since the docker
 // registry does not currently support puling a docker image by its
 // immutable identifier, only by a tag
-func (q *Quayd) LoadImageTags(tag, repo, ref string) error {
-	sha, err := q.commitResolver().Resolve(repo, ref)
-	if err != nil {
-		return err
-	}
+func (q *Quayd) LoadImageTags(commitID, tag, repo, ref string) error {
+	// sha, err := q.commitResolver().Resolve(repo, ref)
+	// if err != nil {
+	// 	return err
+	// }
+
 	// Something that resolves the `tag` into an image id.
 	imageID, err := q.tagResolver().Resolve(repo, tag)
 	if err != nil {
 		return err
 	}
 
-	if err := q.tagger().Tag(repo, imageID, sha); err != nil {
+	if err := q.tagger().Tag(repo, imageID, commitID); err != nil {
 		return err
 	}
 	return q.tagger().Tag(repo, imageID, imageID)

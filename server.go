@@ -2,11 +2,11 @@ package quayd
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"net/http"
-
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
+	"net/http"
 )
 
 var validStatuses = []string{"pending", "success", "error", "failure"}
@@ -35,12 +35,13 @@ type Webhook struct {
 }
 
 type WebhookForm struct {
-	Repository  string   `json:"repository"`
-	TriggerKind string   `json:"trigger_kind"`
-	IsManual    bool     `json:"is_manual"`
-	DockerTags  []string `json:"docker_tags"`
-	BuildName   string   `json:"build_name"`
-	BuildURL    string   `json:"homepage"`
+	Repository      string                 `json:"repository"`
+	TriggerKind     string                 `json:"trigger_kind"`
+	IsManual        bool                   `json:"is_manual"`
+	DockerTags      []string               `json:"docker_tags"`
+	BuildName       string                 `json:"build_name"`
+	BuildURL        string                 `json:"homepage"`
+	TriggerMetadata map[string]interface{} `json:"trigger_metadata"`
 }
 
 func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -58,6 +59,7 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println(form)
 	// We don't want to process manually triggered builds.
 	if !(!form.IsManual && form.TriggerKind == "github") {
 		w.WriteHeader(204)
@@ -65,15 +67,22 @@ func (wh *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if status == "success" {
-		if err := wh.Quayd.LoadImageTags(form.DockerTags[0], form.Repository, form.BuildName); err != nil {
+		commitID, ok := form.TriggerMetadata["commit"].(string)
+		if !ok {
+			errorResponse(w, errors.New("Missing commit"))
+			return
+		}
+		fmt.Println("Commit: ", commitID)
+		if err := wh.Quayd.LoadImageTags(commitID, form.DockerTags[0], form.Repository, form.BuildName); err != nil {
 			errorResponse(w, err)
 			return
 		}
 	}
-	if err := wh.Quayd.Handle(form.Repository, form.BuildName, form.BuildURL, status); err != nil {
-		errorResponse(w, err)
-		return
-	}
+
+	// if err := wh.Quayd.Handle(form.Repository, form.BuildName, form.BuildURL, status); err != nil {
+	// 	errorResponse(w, err)
+	// 	return
+	// }
 
 }
 
