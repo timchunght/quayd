@@ -5,9 +5,9 @@ import (
 	"errors"
 	"net/http"
 	"strings"
-
-	"code.google.com/p/goauth2/oauth"
+	// "code.google.com/p/goauth2/oauth"
 	"github.com/ejholmes/go-github/github"
+	"golang.org/x/oauth2"
 )
 
 var (

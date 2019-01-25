@@ -2,10 +2,9 @@ package main
 
 import (
 	"flag"
+	"github.com/timchunght/quayd"
 	"log"
 	"net/http"
-
-	"github.com/remind101/quayd"
 )
 
 func main() {
